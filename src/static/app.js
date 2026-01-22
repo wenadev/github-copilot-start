@@ -4,41 +4,72 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Check if all required elements exist
+  if (!activitiesList || !activitySelect || !signupForm || !messageDiv) {
+    console.error("Required DOM elements not found");
+    return;
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const activities = await response.json();
 
       // Clear loading message
       activitiesList.innerHTML = "";
 
-      // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
-
-        const spotsLeft = details.max_participants - details.participants.length;
-
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-        `;
-
-        activitiesList.appendChild(activityCard);
-
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
-      });
+      // Populate activities list and dropdown
+      displayActivities(activities);
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
     }
+  }
+
+  function displayActivities(activities) {
+    if (activities.length === 0) {
+      activitiesList.innerHTML = '<p>No activities available at this time.</p>';
+      return;
+    }
+
+    activitiesList.innerHTML = '';
+    activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+
+    activities.forEach(activity => {
+      // Create activity card
+      const card = document.createElement('div');
+      card.className = 'activity-card';
+      
+      const participantsList = activity.participants && activity.participants.length > 0
+        ? `<ul class="participants-list">
+            ${activity.participants.map(p => `<li>${p}</li>`).join('')}
+           </ul>`
+        : `<p class="no-participants">No participants yet. Be the first to sign up!</p>`;
+
+      card.innerHTML = `
+        <h4>${activity.name}</h4>
+        <p><strong>Description:</strong> ${activity.description}</p>
+        <p><strong>Schedule:</strong> ${activity.schedule}</p>
+        <div class="participants-section">
+          <h5>📋 Participants:</h5>
+          ${participantsList}
+        </div>
+      `;
+
+      activitiesList.appendChild(card);
+
+      // Add to select dropdown
+      const option = document.createElement('option');
+      option.value = activity.id;
+      option.textContent = activity.name;
+      activitySelect.appendChild(option);
+    });
   }
 
   // Handle form submission
@@ -47,6 +78,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value;
     const activity = document.getElementById("activity").value;
+
+    if (!email || !activity) {
+      messageDiv.textContent = "Please fill in all fields";
+      messageDiv.className = "error";
+      messageDiv.classList.remove("hidden");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -62,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        await fetchActivities(); // Refresh the activities list
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";

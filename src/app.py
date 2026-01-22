@@ -86,7 +86,17 @@ def root():
 
 @app.get("/activities")
 def get_activities():
-    return activities
+    # Convert dictionary to array format expected by frontend
+    activities_list = []
+    for name, details in activities.items():
+        activities_list.append({
+            "id": name,
+            "name": name,
+            "description": details["description"],
+            "schedule": details["schedule"],
+            "participants": details["participants"]
+        })
+    return activities_list
 
 
 @app.post("/activities/{activity_name}/signup")
