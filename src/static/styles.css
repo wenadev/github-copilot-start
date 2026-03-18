@@ -99,20 +99,28 @@ section h3 {
   font-size: 14px;
 }
 
-.participants-list li::before {
-  content: "•";
-  position: absolute;
-  left: 8px;
-  color: #0066cc;
-  font-weight: bold;
-  font-size: 16px;
-}
-
 .no-participants {
   color: #999;
   font-style: italic;
   font-size: 14px;
   padding-left: 8px;
+}
+
+.delete-participant {
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  padding: 2px 8px;
+  font-size: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.delete-participant:hover {
+  background-color: #cc0000;
 }
 
 .form-group {
